@@ -1,0 +1,7 @@
+{"namespace": "blob.avro",
+ "type": "record",
+ "name": "blob",
+ "fields": [
+     {"name": "data", "type": "bytes"}
+ ]
+}
