@@ -1,9 +1,15 @@
-package com.ibm.imte.tika;
+package org;
 
+import java.io.IOException;
 import java.io.InputStream;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.log4j.Logger;
 import org.apache.tika.Tika;
+import org.apache.tika.exception.TikaException;
+import org.apache.tika.metadata.Metadata;
+import org.apache.tika.parser.AutoDetectParser;
+import org.apache.tika.sax.BodyContentHandler;
+import org.xml.sax.SAXException;
 
 /**
  * TikaHelper class is a Wrapper around the Tika framework To read a file from
@@ -51,6 +57,25 @@ public class TikaHelper
 			logger.error("Malformed PDF for Tika: " + e.getMessage());
 		}
 		return "Malformed PDF";
+	}
+
+	public String getMetadata(InputStream stream){
+
+		AutoDetectParser parser = new AutoDetectParser();
+		BodyContentHandler handler = new BodyContentHandler();
+		Metadata metadata = new Metadata();
+		try {
+			parser.parse(stream, handler, metadata);
+		} catch (IOException e) {
+			e.printStackTrace();
+		} catch (SAXException e) {
+			e.printStackTrace();
+		} catch (TikaException e) {
+			e.printStackTrace();
+		}
+
+		return metadata.toString();
+
 	}
 
 }

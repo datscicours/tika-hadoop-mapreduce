@@ -1,4 +1,4 @@
-package com.ibm.imte.tika;
+package org;
 
 import java.io.DataOutputStream;
 import java.io.IOException;

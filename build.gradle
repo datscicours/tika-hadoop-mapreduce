@@ -1,0 +1,42 @@
+group 'org'
+version '1.0-SNAPSHOT'
+
+apply plugin: 'java'
+apply plugin: 'idea'
+apply plugin: 'maven'
+sourceCompatibility = 1.7
+
+repositories {
+    mavenCentral()
+}
+
+//jar {
+//    manifest {
+//        attributes 'Main-Class': 'org.TikaDriver'
+//    }
+//}
+
+
+
+task fatJar(type: Jar) {
+    manifest {
+        attributes 'Implementation-Title': 'Gradle Jar File Example',
+                'Implementation-Version': version,
+                'Main-Class': 'org.TikaDriver'
+    }
+    baseName = project.name + '-all'
+    from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
+    with jar
+}
+
+dependencies {
+    testCompile group: 'junit', name: 'junit', version: '4.11'
+    compile "org.apache.hadoop:hadoop-client:2.6.0"
+    compile "org.apache.hadoop:hadoop-common:2.6.0"
+    compile "org.apache.tika:tika-core:1.13"
+    compile "org.apache.tika:tika-parsers:1.13"
+    compile "com.twitter:parquet-column:1.6.0"
+    compile "com.twitter:parquet-hadoop:1.6.0"
+    compile "org.apache.avro:avro:1.7.1"
+    //compile "org.resourceTest:resourceTest:1.0-SNAPSHOT"
+}

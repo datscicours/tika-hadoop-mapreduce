@@ -1,4 +1,4 @@
-package com.ibm.imte.tika;
+package org;
 
 import java.io.IOException;
 
@@ -61,10 +61,11 @@ public class TikaRecordReader extends RecordReader<Text, Text>
 		}
 
 		currentStream = null;
+//		TikaInputStream.get(path);
 		currentStream = fs.open(path);
 
 		key.set(path.getName());
-		value.set(tikaHelper.readPath(currentStream));
+		value.set(tikaHelper.getMetadata(currentStream));
 
 		currentStream.close();
 		count++;
