@@ -1,9 +1,6 @@
 package org;
 
-import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
-
+import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileSystem;
@@ -12,8 +9,9 @@ import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.InputSplit;
 import org.apache.hadoop.mapreduce.RecordReader;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
-import org.apache.hadoop.mapreduce.lib.input.CombineFileSplit;
 import org.apache.hadoop.mapreduce.lib.input.FileSplit;
+
+import java.io.IOException;
 
 /**
  * This is the main conversion class. It gets a list of documents in a split and
@@ -31,9 +29,12 @@ public class TikaRecordReader extends RecordReader<Text, Text>
 	private TikaHelper tikaHelper;
 	private Configuration conf;
 
+	TarArchiveInputStream tarStream;
+
 	// count and done are used for progress
 	private int count = 0;
 	private boolean done = false;
+	private boolean complete = true;
 
 	public TikaRecordReader(FileSplit split, TaskAttemptContext context)
 			throws IOException
@@ -48,38 +49,26 @@ public class TikaRecordReader extends RecordReader<Text, Text>
 	@Override
 	public boolean nextKeyValue() throws IOException, InterruptedException
 	{
-//		if (count >= split.getNumPaths())
-//		{
-//			done = true;
-//			return false; // we have no more data to parse
-//		}
 
-		//Path path = null;
 		key = new Text();
 		value = new Text();
 
-//		try
-//		{
-//			path = this.paths[count];
-//		} catch (Exception e)
-//		{
-//			return false;
-//		}
 
-		currentStream = null;
-//		TikaInputStream.get(path
-			this.fs = paths.getFileSystem(conf);
-			//this.fs = FileSystem.get(new URI(paths.getName()), conf);
+		this.fs = paths.getFileSystem(conf);
 		currentStream = fs.open(paths);
-
 		key.set(paths.getName());
 		value.set(tikaHelper.getMetadata(currentStream));
 
 		currentStream.close();
 		count++;
 
-		//return true; // we have more data to parse
-		return false;
+
+		if(complete) {
+			complete = false;
+			return true;
+		}
+		else
+			return false;
 	}
 
 	@Override
