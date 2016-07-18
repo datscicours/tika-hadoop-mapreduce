@@ -12,7 +12,7 @@ import org.apache.tika.sax.BodyContentHandler;
 import org.xml.sax.SAXException;
 
 /**
- * TikaHelper class is a Wrapper around the Tika framework To read a file from
+ * BinaryHelper class is a Wrapper around the Tika framework To read a file from
  * an input stream replace delimited and new line characters and return the
  * string content.
  */

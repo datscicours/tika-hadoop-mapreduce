@@ -4,6 +4,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.BytesWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.InputSplit;
 import org.apache.hadoop.mapreduce.RecordReader;
@@ -11,18 +12,20 @@ import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 
 /**
  * This is the main conversion class. It gets a list of documents in a split and
  * then reads them one by one returning a record with the filename as the key
  * and the file content as the value.
  */
-public class BinaryRecordReader extends RecordReader<Text, Text>
+public class BinaryRecordReader extends RecordReader<Text, BytesWritable>
 {
 
 	private FileSplit split;
 	private FileSystem fs;
-	private Text key, value;
+	private Text key;
+	private BytesWritable value;
 	private Path paths;
 	private FSDataInputStream currentStream;
 	private BinaryHelper tikaHelper;
@@ -53,7 +56,7 @@ public class BinaryRecordReader extends RecordReader<Text, Text>
 
 		//Path path = null;
 		key = new Text();
-		value = new Text();
+		value = new BytesWritable();
 
 //		try
 //		{
@@ -65,12 +68,14 @@ public class BinaryRecordReader extends RecordReader<Text, Text>
 
 		currentStream = null;
 //		TikaInputStream.get(path
-			this.fs = paths.getFileSystem(conf);
-			//this.fs = FileSystem.get(new URI(paths.getName()), conf);
+		this.fs = paths.getFileSystem(conf);
+		//this.fs = FileSystem.get(new URI(paths.getName()), conf);
 		currentStream = fs.open(paths);
 
 		key.set(paths.getName());
-		value.set(tikaHelper.getMetadata(currentStream));
+		ByteBuffer buff = ByteBuffer.allocate(4096);
+		currentStream.read(buff);
+		//value.set(new BytesWritable(buff.array()));
 
 		currentStream.close();
 		count++;
@@ -92,7 +97,7 @@ public class BinaryRecordReader extends RecordReader<Text, Text>
 	}
 
 	@Override
-	public Text getCurrentValue() throws IOException, InterruptedException
+	public BytesWritable getCurrentValue() throws IOException, InterruptedException
 	{
 		return value;
 	}

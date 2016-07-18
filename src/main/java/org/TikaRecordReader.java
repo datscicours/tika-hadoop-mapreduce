@@ -1,7 +1,10 @@
 package org;
 
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -10,6 +13,7 @@ import org.apache.hadoop.mapreduce.InputSplit;
 import org.apache.hadoop.mapreduce.RecordReader;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import org.apache.hadoop.mapreduce.lib.input.CombineFileSplit;
+import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 
 /**
  * This is the main conversion class. It gets a list of documents in a split and
@@ -19,22 +23,24 @@ import org.apache.hadoop.mapreduce.lib.input.CombineFileSplit;
 public class TikaRecordReader extends RecordReader<Text, Text>
 {
 
-	private CombineFileSplit split;
+	private FileSplit split;
 	private FileSystem fs;
 	private Text key, value;
-	private Path[] paths;
+	private Path paths;
 	private FSDataInputStream currentStream;
 	private TikaHelper tikaHelper;
+	private Configuration conf;
 
 	// count and done are used for progress
 	private int count = 0;
 	private boolean done = false;
 
-	public TikaRecordReader(CombineFileSplit split, TaskAttemptContext context)
+	public TikaRecordReader(FileSplit split, TaskAttemptContext context)
 			throws IOException
 	{
-		this.paths = split.getPaths();
-		this.fs = FileSystem.get(context.getConfiguration());
+		this.paths = split.getPath();
+		this.conf = context.getConfiguration();
+		this.fs = FileSystem.get(conf);
 		this.split = split;
 		this.tikaHelper = new TikaHelper(context.getConfiguration());
 	}
@@ -42,35 +48,38 @@ public class TikaRecordReader extends RecordReader<Text, Text>
 	@Override
 	public boolean nextKeyValue() throws IOException, InterruptedException
 	{
-		if (count >= split.getNumPaths())
-		{
-			done = true;
-			return false; // we have no more data to parse
-		}
+//		if (count >= split.getNumPaths())
+//		{
+//			done = true;
+//			return false; // we have no more data to parse
+//		}
 
-		Path path = null;
+		//Path path = null;
 		key = new Text();
 		value = new Text();
 
-		try
-		{
-			path = this.paths[count];
-		} catch (Exception e)
-		{
-			return false;
-		}
+//		try
+//		{
+//			path = this.paths[count];
+//		} catch (Exception e)
+//		{
+//			return false;
+//		}
 
 		currentStream = null;
-//		TikaInputStream.get(path);
-		currentStream = fs.open(path);
+//		TikaInputStream.get(path
+			this.fs = paths.getFileSystem(conf);
+			//this.fs = FileSystem.get(new URI(paths.getName()), conf);
+		currentStream = fs.open(paths);
 
-		key.set(path.getName());
+		key.set(paths.getName());
 		value.set(tikaHelper.getMetadata(currentStream));
 
 		currentStream.close();
 		count++;
 
-		return true; // we have more data to parse
+		//return true; // we have more data to parse
+		return false;
 	}
 
 	@Override
@@ -94,7 +103,8 @@ public class TikaRecordReader extends RecordReader<Text, Text>
 	@Override
 	public float getProgress() throws IOException, InterruptedException
 	{
-		return done ? 1.0f : (float) (count / paths.length);
+		//return done ? 1.0f : (float) (count / paths.length);
+		return 1;
 	}
 
 	@Override

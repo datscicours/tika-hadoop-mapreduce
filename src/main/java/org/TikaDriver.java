@@ -11,6 +11,8 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 
+import java.io.BufferedReader;
+import java.io.FileReader;
 import java.io.IOException;
 
 /**
@@ -39,11 +41,18 @@ public class TikaDriver extends Configured implements Tool {
         job.setJobName("TikaRead");
         job.setMapperClass(FlatMapper.class);
 
+        job.addFileToClassPath(new Path("hdfs:///user/cloudera/tika-app-1.13.jar"));
         // Finally we have to set our input and output format classes
         job.setInputFormatClass(TikaInputFormat.class);
-        //job.setOutputFormatClass(TikaOutputFormat.class);
+        //job.setOutputFormatClass(BinaryOutputFormat.class);
 
-        FileInputFormat.addInputPath(job, new Path(args[0]));
+        //  FileInputFormat.addInputPath(job, new Path(args[0]));
+
+        BufferedReader reader = new BufferedReader(new FileReader(args[0]));
+        String filename;
+        while((filename = reader.readLine()) != null)
+            FileInputFormat.addInputPath(job, new Path(filename));
+
         job.setOutputKeyClass(Text.class);
         job.setOutputValueClass(Text.class);
 

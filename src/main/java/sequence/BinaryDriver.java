@@ -3,11 +3,13 @@ package sequence;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.BytesWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
+import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 
@@ -35,16 +37,14 @@ public class BinaryDriver extends Configured implements Tool {
         conf.setInt("mapreduce.input.fileinputformat.split.maxsize", 67108864);
         Job job = Job.getInstance(conf, "TikaTest");
         // now we optionally set the delimiter and replacement character
-        conf.setStrings("com.ibm.imte.tika.delimiter", "|");
-        conf.setStrings("com.ibm.imte.tika.replaceCharacterWith", " ");
         job.setJarByClass(getClass());
-        job.setJobName("TikaRead");
+        job.setJobName("BinaryToSeq");
         job.setMapperClass(FlatMapper.class);
 
         job.addFileToClassPath(new Path("hdfs:///user/cloudera/tika-app-1.13.jar"));
         // Finally we have to set our input and output format classes
-        job.setInputFormatClass(TikaInputFormat.class);
-        //job.setOutputFormatClass(TikaOutputFormat.class);
+        job.setInputFormatClass(BinaryInputFormat.class);
+        //job.setOutputFormatClass(BinaryOutputFormat.class);
 
         //  FileInputFormat.addInputPath(job, new Path(args[0]));
 
@@ -52,12 +52,15 @@ public class BinaryDriver extends Configured implements Tool {
         String filename;
         while((filename = reader.readLine()) != null)
             FileInputFormat.addInputPath(job, new Path(filename));
+        reader.close();
 
         job.setOutputKeyClass(Text.class);
-        job.setOutputValueClass(Text.class);
+        job.setOutputValueClass(BytesWritable.class);
+
+        job.setOutputFormatClass(SequenceFileOutputFormat.class);
 
         job.setMapOutputKeyClass(Text.class);
-        job.setMapOutputValueClass(Text.class);
+        job.setMapOutputValueClass(BytesWritable.class);
         job.setNumReduceTasks(0);
 
         FileOutputFormat.setOutputPath(job, new Path(args[1]));
@@ -65,9 +68,9 @@ public class BinaryDriver extends Configured implements Tool {
     }
 
     public static class FlatMapper
-            extends Mapper<Object, Text, Text, Text> {
+            extends Mapper<Text, BytesWritable, Text, BytesWritable> {
 
-        public void map(Text key, Text value, Context context) throws IOException, InterruptedException {
+        public void map(Text key, BytesWritable value, Context context) throws IOException, InterruptedException {
             context.write(key, value);
         }
     }

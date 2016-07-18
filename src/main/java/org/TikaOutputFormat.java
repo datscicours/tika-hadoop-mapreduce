@@ -10,8 +10,8 @@ import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 
 /**
- * Our TikaOutputFormat class creates an output stream and sets the
- * TikaRecordWriter. We could have also used the standard TextOutputFormat class
+ * Our BinaryOutputFormat class creates an output stream and sets the
+ * BinaryRecordWriter. We could have also used the standard TextOutputFormat class
  * and created the strings in the Mapper or Reducer of our job.
  */
 public class TikaOutputFormat extends FileOutputFormat<Text, Text>

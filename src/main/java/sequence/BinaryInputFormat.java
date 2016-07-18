@@ -1,6 +1,7 @@
 package sequence;
 
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.BytesWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.InputSplit;
 import org.apache.hadoop.mapreduce.JobContext;
@@ -16,10 +17,10 @@ import java.io.IOException;
  * small files from HDFS. It then sets our BinaryRecordReader that will extract
  * the text from the documents.
  */
-public class BinaryInputFormat extends FileInputFormat<Text, Text>
+public class BinaryInputFormat extends FileInputFormat<Text, BytesWritable>
 {
 	@Override
-	public RecordReader<Text, Text> createRecordReader(InputSplit split,
+	public RecordReader<Text, BytesWritable> createRecordReader(InputSplit split,
 			TaskAttemptContext context) throws IOException
 	{
 
