@@ -31,23 +31,21 @@ public class TikaDriver extends Configured implements Tool {
     @Override
     public int run(String[] args) throws Exception {
         Configuration conf = new Configuration();
-        // setting the input split size 64lMB or 128MB are good.
-        conf.setInt("mapreduce.input.fileinputformat.split.maxsize", 67108864);
+
         Job job = Job.getInstance(conf, "TikaTest");
-        // now we optionally set the delimiter and replacement character
-        conf.setStrings("com.ibm.imte.tika.delimiter", "|");
-        conf.setStrings("com.ibm.imte.tika.replaceCharacterWith", " ");
         job.setJarByClass(getClass());
         job.setJobName("TikaRead");
         job.setMapperClass(FlatMapper.class);
 
+        //hard coded jar path
         job.addFileToClassPath(new Path("hdfs:///user/cloudera/tika-app-1.13.jar"));
         // Finally we have to set our input and output format classes
         job.setInputFormatClass(TikaInputFormat.class);
-        //job.setOutputFormatClass(BinaryOutputFormat.class);
+        //job.setOutputFormatClass(FileOutputFormat.class);
 
         //  FileInputFormat.addInputPath(job, new Path(args[0]));
 
+        // First parameter must point to local file which contains newline separated hdfs paths
         BufferedReader reader = new BufferedReader(new FileReader(args[0]));
         String filename;
         while((filename = reader.readLine()) != null)

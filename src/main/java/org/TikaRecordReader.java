@@ -1,5 +1,6 @@
 package org;
 
+import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
@@ -26,10 +27,9 @@ public class TikaRecordReader extends RecordReader<Text, Text>
 	private Text key, value;
 	private Path paths;
 	private FSDataInputStream currentStream;
+	private TarArchiveInputStream tarStream;
 	private TikaHelper tikaHelper;
 	private Configuration conf;
-
-	TarArchiveInputStream tarStream;
 
 	// count and done are used for progress
 	private int count = 0;
@@ -50,21 +50,18 @@ public class TikaRecordReader extends RecordReader<Text, Text>
 	public boolean nextKeyValue() throws IOException, InterruptedException
 	{
 
-		key = new Text();
-		value = new Text();
+		TarArchiveEntry entry;
 
+		while((entry = tarStream.getNextTarEntry()) != null){
+			if(entry.isFile())
+				break;
+		}
 
-		this.fs = paths.getFileSystem(conf);
-		currentStream = fs.open(paths);
-		key.set(paths.getName());
-		value.set(tikaHelper.getMetadata(currentStream));
+		if(entry != null){
+			key.set(entry.getName());
+			value.set(tikaHelper.getMetadata(tarStream));
+			count++;
 
-		currentStream.close();
-		count++;
-
-
-		if(complete) {
-			complete = false;
 			return true;
 		}
 		else
@@ -100,5 +97,14 @@ public class TikaRecordReader extends RecordReader<Text, Text>
 	public void initialize(InputSplit split, TaskAttemptContext context)
 			throws IOException, InterruptedException
 	{
+
+		key = new Text();
+		value = new Text();
+
+		this.fs = paths.getFileSystem(conf);
+		currentStream = fs.open(paths);
+
+		tarStream = new TarArchiveInputStream(currentStream);
+
 	}
 }
